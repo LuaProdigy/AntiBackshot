@@ -1,8 +1,9 @@
+--!strict
 local DeployComponents = {}
 
 DeployComponents.__index = DeployComponents
 
-function DeployComponents.new(Config, TextChatService, AntiBackshotF)
+function DeployComponents.new(Config, TextChatService: TextChatService, AntiBackshotF: Folder)
 	local self = setmetatable({}, DeployComponents)
 	self.Config = Config
 	self.TextChatService = TextChatService
