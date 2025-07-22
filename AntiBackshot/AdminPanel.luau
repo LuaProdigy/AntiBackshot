@@ -1,3 +1,4 @@
+--!strict
 --//Services
 local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
@@ -10,9 +11,9 @@ local AntiBackshotF = ReplicatedStorage:WaitForChild("AntiBackshot")
 local Config = require(AntiBackshotF:WaitForChild("Config"))
 local BanDataStore = DataStoreService:GetDataStore(Config.DataStore.DataStoreName)
 local RemotesF = AntiBackshotF:WaitForChild("Remotes")
-local Remote = RemotesF:WaitForChild("AntiBackshotEvents")
-local CommandsF = TextChatService:WaitForChild("AntiBackshotCommands")
-local BackshotBannedCmd = CommandsF:WaitForChild("AntiBackshotBannedList")
+local Remote = RemotesF:WaitForChild("AntiBackshotEvents") :: RemoteEvent
+local CommandsF = TextChatService:WaitForChild("AntiBackshotCommands") :: RemoteEvent
+local BackshotBannedCmd = CommandsF:WaitForChild("AntiBackshotBannedList") :: TextChatCommand
 
 
 local AdminPanel = {}
@@ -32,13 +33,13 @@ end
 
 
 
-local function ColorTag(Color, Text)
+local function ColorTag(Color: Color3, Text: string)
 	return string.format("<font color=\"rgb(%d,%d,%d)\">%s</font>",Color.R*255,Color.G*255,Color.B*255,Text)
 end
 
 
 
-local function SendChat(Admin, Text)
+local function SendChat(Admin: Player, Text: string	)
 
 	local PrefixColor = Config.AdminConfig.PrefixColor
 	local MessageColor = Config.AdminConfig.MsgColor
@@ -60,12 +61,11 @@ end
 
 
 
-local function SystemResponse(Uid,Data)
-
+local function SystemResponse(Uid: number, Data: any): string
 	local Name = "Unknown User"
 
-	local plrname, fid = pcall(function() 
-		return Players:GetNameFromUserIdAsync(tonumber(Uid)) 
+	local plrname, fid = pcall(function()
+		return Players:GetNameFromUserIdAsync(tonumber(Uid))
 	end)
 
 	if plrname and fid then 
