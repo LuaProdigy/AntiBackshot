@@ -1,3 +1,4 @@
+--!strict
 --//Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
@@ -14,19 +15,22 @@ local Visual = Config.DebugVisual or {Enabled = false}
 local BanDataStore = DataStoreService:GetDataStore(Config.DataStore.DataStoreName)
 
 
-local ConsCheck = nil
+local ConsCheck: RBXScriptConnection? = nil
 local playerState = {}
 local Banned = {}
 
 
-local function GetPlayerRoot(Char)
-	return Char:FindFirstChild("HumanoidRootPart") or Char:FindFirstChild("Torso")
+local function GetPlayerRoot(Char: Model): BasePart?
+	local PlayerRoot = Char:FindFirstChild("HumanoidRootPart") or Char:FindFirstChild("Torso")
+	if PlayerRoot and PlayerRoot:IsA("BasePart") then
+		return PlayerRoot
+	end
+	return
 end
 
 
-local function DebugRay(Origin, Direction, HitPos)
-
-	local Length = HitPos and (HitPos - Origin).Magnitude or Direction.Magnitude
+local function DebugRay(Origin: Vector3, Direction: Vector3, HitPos: Vector3?)
+	local Length = if HitPos then (HitPos - Origin).Magnitude else Direction.Magnitude
 
 	if not Visual.Enabled then 
 		return 
@@ -42,30 +46,30 @@ local function DebugRay(Origin, Direction, HitPos)
 	part.Size = Vector3.new(Visual.Thickness, Visual.Thickness, Length)
 	part.CFrame = CFrame.new(Origin + Direction.Unit * (Length * 0.5), Origin + Direction)
 	part.Parent = workspace
-	Debris:AddItem(part,Visual.Lifetime)
+	Debris:AddItem(part, Visual.Lifetime)
 end
 
 
 
-local function GetMovementDir(Root)
+local function GetMovementDir(Root: BasePart): number
 
 	if not Root then 
 		return 0 
 	end
 
-	local Velocity = Root.Velocity
+	local Velocity = Root.AssemblyLinearVelocity
 	local Dot = Velocity:Dot(Root.CFrame.LookVector)
 
 	if math.abs(Dot) < Config.Detection.MinSpeed then 
 		return 0 
 	end
 
-	return (Dot >= 0) and 1 or -1
+	return if (Dot >= 0) then 1 else -1
 end
 
 
 
-local function IsBehindVictim(AbuserRoot, Victim)
+local function IsBehindVictim(AbuserRoot: BasePart, Victim: Model)
 
 	local Origin = AbuserRoot.Position
 	local Direction = AbuserRoot.CFrame.LookVector * Config.Detection.MaxDistance
@@ -73,8 +77,10 @@ local function IsBehindVictim(AbuserRoot, Victim)
 	DebugRay(Origin, Direction)
 
 	local RayParams = RaycastParams.new()
-	RayParams.FilterType = Enum.RaycastFilterType.Blacklist
-	RayParams.FilterDescendantsInstances = {AbuserRoot.Parent}
+	RayParams.FilterType = Enum.RaycastFilterType.Exclude
+	if AbuserRoot.Parent then
+		RayParams.FilterDescendantsInstances = {AbuserRoot.Parent}
+	end
 
 	local VisibleRay = workspace:Raycast(Origin, Direction, RayParams)
 
@@ -209,7 +215,9 @@ local function DetectBackshot()
 
 		local Character, Humanoid = Abuser.Character, Abuser.Character and Abuser.Character:FindFirstChildOfClass("Humanoid")
 		local Root = Character and GetPlayerRoot(Character)
-
+		if not Root then
+			return
+		end	
 		local State = PlayerState(Abuser)
 		local Dir = GetMovementDir(Root)
 		local CurrentT = os.clock()

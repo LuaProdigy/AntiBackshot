@@ -1,3 +1,4 @@
+--!strict
 local Config = {}
 
 Config.Detection = {

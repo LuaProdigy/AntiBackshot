@@ -1,3 +1,4 @@
+--!strict
 --// Services
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -18,7 +19,6 @@ local Deploy = DeployComponents.new(Config, TextChatService, AntiBackshotF)
 if not StarterPlayerScripts:FindFirstChild(ABChatClient.Name) then
 	ABChatClient:Clone().Parent = StarterPlayerScripts
 end
-
 
 Deploy:Init()
 
